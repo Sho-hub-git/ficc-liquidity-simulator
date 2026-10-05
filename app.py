@@ -19,7 +19,11 @@ def get_model(_m, tag):
 
 # ---------------- Sidebar: scenario injection ----------------
 sb = st.sidebar
-key = sb.text_input("FRED API key (optional)", os.getenv("FRED_API_KEY", ""), type="password")
+# 画面の入力欄（初期値は空にする）
+user_api_key = st.sidebar.text_input("FRED API key (optional)", type="password")
+
+# 裏側のロジック：ユーザー入力があればそれを使い、なければSecretsのキーを裏で使う
+api_key_to_use = user_api_key if user_api_key else st.secrets["FRED_API_KEY"]
 sb.header("Stress scenario")
 dvix = sb.slider("VIX shock (pts)", 0, 50, 20)
 drate = sb.slider("Rate hike (bps)", 0, 300, 100, 25)
@@ -31,7 +35,7 @@ mpct = sb.slider("Margin call as % of MTM loss", 0, 100, 50, 5)
 thr = sb.slider("Liquidity score alert threshold", 10, 90, 50)
 part = sb.slider("Max market participation", 0.02, 0.30, 0.10, 0.01)
 
-macro, src = get_macro(key)
+macro, src = get_macro(api_key_to_use)
 model, auc, cols = get_model(macro, f"{src}-{len(macro)}")
 sb.caption(f"Data: {src}  \nThrough {macro.index[-1].date()}  \nOOS AUC: {auc:.2f}" if not np.isnan(auc) else f"Data: {src}")
 
